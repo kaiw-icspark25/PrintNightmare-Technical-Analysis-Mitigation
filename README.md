@@ -53,10 +53,12 @@ Both vulnerabilities exploit a structural error inside spoolsv.exe, specifically
 
 ## 4. Defense Mitigations
 PrintNightmare can be completely neutralized by basic network hardening techniques for small businesses and enterprise networks.
-### Remediation Path 1: Windows Patches
+
+### Manual Method(Not Recommended, Skip to Auto Section)
+### Remediation Step 1: Windows Patches
 Make sure all security updates released after July 2021 are installed. Modern Windows updates alter the bug `RpcAddPrinterDriverEx` to require admin privileges to install any printer drivers using point to print config.
 
-### Remediation Path 2: Hardening Registry
+### Remediation Step 2: Hardening Registry
 Even with Windows Patches installed, malicious actors can exploit legacy code logic or misconfigured registries to bypass Windows updates entirely. Thus, explicit configuration is required via the Windows Registry or Group Policy Objects (GPO).
 > [!NOTE]
 > **Target Registry Configuration:**
@@ -66,7 +68,7 @@ Even with Windows Patches installed, malicious actors can exploit legacy code lo
 > * **Key:** `NoWarningNoElevationOnUpdate` → Set to `0` (Disabled)
 
 
-### Remediation Path 3: Disabling Spooler Service
+### Remediation Step 3: Disabling Spooler Service(opt)
 For servers that don't use physical printers that managed by GPO, it is best to disable Print Spooler service entirely. This can be done in Powershell(admin) or services.msc.
 #### Powershell
 1. Press the Windows Key, type powershell, right-click on the application, and select Run as administrator.
@@ -85,6 +87,75 @@ Set-Service -Name Spooler -StartupType Disabled
 5. Stop the Service: Click the Stop button under the "Service status" section. Wait for the progress bar to finish.
 6. Disable the Startup: Locate the Startup type dropdown menu and change it from Automatic or Manual to Disabled.
 7. Save and Close: Click Apply, and then click OK to close the properties window
+
+## 4.1 Auto Configuration via Auto-Powershell Script(Audit-PrintNightmare.ps1)
+
+To simplify compliance across Windows hosts, this repository includes an automated PowerShell tool (`Audit-PrintNightmare.ps1`). It evaluates the local system state and can automatically enforce restrictive Point-and-Print registry keys while safely managing spoolsv.exe.
+
+### Features
+
+* **Read-Only Audit Mode:** Inspects system compliance and registry flags without making operational changes.
+* **Automated Remediation (`-Fix`):** Enforces administrative restrictions on driver installation and forces credential elevation prompts.
+* **Service Hardening:** Interactively stops and disables `spoolsv.exe` on non-print server hosts to reduce attack surface.
+* **Privilege Validation:** Verifies administrative execution context prior to executing registry modifications.
+
+### Security Controls Enforced
+
+| Setting | Path | Target Value | Security Purpose |
+| :--- | :--- | :--- | :--- |
+| **RestrictDriverInstallationToAdministrators** | `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers\PointAndPrint` | `1` (`DWORD`) | Restricts driver installation privileges strictly to administrators. |
+| **NoWarningNoElevationOnInstall** | `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers\PointAndPrint` | `0` (`DWORD`) | Enforces elevation prompts when installing new printer drivers. |
+| **NoWarningNoElevationOnUpdate** | `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers\PointAndPrint` | `0` (`DWORD`) | Enforces elevation prompts when updating existing printer drivers. |
+| **Print Spooler Service** | `Spooler` (`spoolsv.exe`) | `Stopped`,`Disabled` | Stops & Disables service on endpoints/DCs that do not host physical printers. |
+
+### Prerequisites
+
+* Windows 10, Windows 11, or Windows Server 2012 R2+
+* PowerShell 5.1 or higher
+* Administrative privileges (`Run as Administrator`)
+
+### Usage Instructions
+
+
+### Execution Instructions
+
+1. **Open Elevated PowerShell**
+
+Right-click PowerShell and select Run as Administrator.
+
+2. **Clone or Download the Repository**
+```powershell
+git clone https://github.com/kaiw-icspark25/PrintNightmare-Technical-Analysis-Mitigation.git
+```
+
+3. **Set Temporary Execution Policy (If Needed)**
+
+Allow the script to run within your active session without changing global system policies:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
+```
+ 
+4. **Change Directory**
+
+```powershell
+cd \PrintNightmare-Technical-Analysis-Mitigation
+```
+
+4. **Run in Audit Mode (Safe / Read-Only)**
+```powershell
+.\Audit-PrintNightmare.ps1
+```
+
+5. **4. Run in Hardening Mode (Remediation)**
+```powershell
+.\Audit-PrintNightmare.ps1 -Fix
+```
+
+6. **Re-run in Audit Mode to check to see if it worked**
+```powershell
+.\Audit-PrintNightmare.ps1
+```
 
 ## 5. Conclusion & Key Takeaways
 The PrintNightmare vulnerability family (`CVE-2021-1675` / `CVE-2021-34527`) remains one of the most critical studies in modern Windows security. By analyzing this exploit chain, several security principles become clear:
