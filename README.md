@@ -9,10 +9,22 @@ Ethical Disclaimer: This repository is created strictly for educational purposes
   * *Justification:* CVE-2021-34481 involves a separate Local Privilege Escalation mechanism disclosed in July 2021 and patched in August 2021. This repository focuses strictly on the SMB/RPC remote driver loading vectors of CVE-2021-34527.
 
 ## 1. Executive Summary
+The PrintNightmare(CVE-2021-34527 & CVE-2021-1675) is a critical vulnerability within the spoolsv.exe dealing with improper authorization and access control validation which are exploited through RPC functions.
+
+### Vulnerability Matrix
+
+|Metric|CVE-2021-1675|CVE-2021-34527|
+| :---| :---| :---|
+| **Common Name** | PrintNightmare(Local Variant) | PrintNightmare(Remote Variant) |
+| **NVD CVSS v3.x Score**| 7.8 HIGH | 8.8 HIGH |
+| **Primary Vector** | Local Privilege Escalation (LPE) | Remote Code Execution (RCE) |
+| **Weakness Type** | CWE-269 (Improper Privilege Management) -A flaw in the RpcAddPrinterDriverEx() function allowed low-privilege users to bypass authentication mechanisms and execute arbitrary code.| CWE-287 (Improper Authentication)-A logic flaw where the Spooler service failed to adequately validate the authorization level or path of a user-supplied printer driver during remote execution. |
+| **Initial Patch Date** | June 8, 2021 | July 1, 2021 (Out-of-Band Emergency) |
 
 ## 2. History & CVE Duality
 
 ## 3. Technical Root Cause Analysis
+
 
 ## 4. Defense Mitigations
 PrintNightmare can be completely neutralized by basic network hardening techniques for small businesses and enterprise networks.
@@ -46,9 +58,8 @@ Set-Service -Name Spooler -StartupType Disabled
 6. Disable the Startup: Locate the Startup type dropdown menu and change it from Automatic or Manual to Disabled.
 7. Save and Close: Click Apply, and then click OK to close the properties window
 
-
-
 ## 5. Conclusion
+
 
 ## 6. Resources
 
