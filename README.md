@@ -6,7 +6,7 @@ Ethical Disclaimer: This repository is created strictly for educational purposes
 ## Scope & Variant Exclusions
 * **In-Scope:** CVE-2021-34527 & CVE-2021-1675 (Core PrintNightmare RCE/LPE via `RpcAddPrinterDriverEx`).
 * **Out-of-Scope:** CVE-2021-34481.
-  * *Justification:* CVE-2021-34481 involves a separate Local Privilege Escalation mechanism disclosed in July 2021 and patched in August 2021. This repository focuses strictly on the SMB/RPC remote driver loading vectors of CVE-2021-34527.
+  * *Justification:* CVE-2021-34481 involves a separate Local Privilege Escalation mechanism disclosed in July 2021 and patched in August 2021. This repository focuses strictly on the SMB/RPC remote driver loading vectors of CVE-2021-34527&CVE-2021-1675.
 
 ## 1. Executive Summary
 The PrintNightmare(CVE-2021-34527 & CVE-2021-1675) is a critical vulnerability within the spoolsv.exe dealing with improper authorization and access control validation which are exploited through RPC functions.
