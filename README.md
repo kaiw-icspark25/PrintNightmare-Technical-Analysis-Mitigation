@@ -84,7 +84,21 @@ Set-Service -Name Spooler -StartupType Disabled
 ## 5. Conclusion
 
 
-## 6. Resources
+## 6. References & Technical Resources
+
+### Official Advisories & Vulnerability Tracking
+* **Microsoft Security Response Center (MSRC):** [CVE-2021-34527 - Windows Print Spooler Remote Code Execution Vulnerability](https://microsoft.com)
+* **Microsoft Security Response Center (MSRC):** [CVE-2021-1675 - Windows Print Spooler Privilege Escalation Vulnerability](https://microsoft.com)
+* **CISA Current Activity:** [CISA Adds PrintNightmare to Known Exploited Vulnerabilities Catalog](https://cisa.gov)
+
+### Deep-Dive Technical Analyses
+* **Sygnia Threat Advisories:** [Demystifying the PrintNightmare Vulnerability](https://sygnia.co) — *Excellent breakdown of the internal `RpcAddPrinterDriverEx` logic bug.*
+* **Rapid7 Analysis:** [CVE-2021-34527: PrintNightmare Exploit Analysis](https://rapid7.com) — *Covers the directory junction and file system behavior.*
+* **Truesec Research:** [PrintNightmare Explained - Technical Breakdown](https://truesec.com) — *Details the RPC over SMB communication mechanism.*
+
+### Public Proof-of-Concepts & Implementations
+* **cube0x0:** [SharpPrintNightmare Repository](https://github.com) — *C# implementation demonstrating the specific `dwFileCopyFlags` (0x10) manipulation.*
+* **ly4k:** [PrintNightmare Python Exploit](https://github.com) — *Demonstrates remote network exploitation via the `\pipe\spoolss` named pipe.*
 
 
 
