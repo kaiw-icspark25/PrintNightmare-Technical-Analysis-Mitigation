@@ -63,6 +63,7 @@ Even with Windows Patches installed, malicious actors can exploit legacy code lo
 > * **Path:** `HKLM\Software\Policies\Microsoft\Windows NT\Printers\PointAndPrint`
 > * **Key:** `RestrictDriverInstallationToAdministrators` → Set to `1` (Enforced)
 > * **Key:** `NoWarningNoElevationOnInstall` → Set to `0` (Disabled)
+> * **Key:** `NoWarningNoElevationOnUpdate` → Set to `0` (Disabled)
 
 
 ### Remediation Path 3: Disabling Spooler Service
