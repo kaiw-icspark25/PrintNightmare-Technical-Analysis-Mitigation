@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+; Hardening Windows Print Spooler configuration to prevent PrintNightmare exploits
+; Target: HKLM\Software\Policies\Microsoft\Windows NT\Printers\PointAndPrint
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Printers\PointAndPrint]
+"RestrictDriverInstallationToAdministrators"=dword:00000001
+"NoWarningNoElevationOnInstall"=dword:00000000
