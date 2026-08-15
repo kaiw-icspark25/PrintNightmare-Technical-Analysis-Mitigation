@@ -116,43 +116,42 @@ To simplify compliance across Windows hosts, this repository includes an automat
 
 ### Usage Instructions
 
-
-### Execution Instructions
-
 1. **Open Elevated PowerShell**
-
+Search Powershell in Windows Search Menu
 Right-click PowerShell and select Run as Administrator.
 
-2. **Clone or Download the Repository**
-```powershell
-git clone https://github.com/kaiw-icspark25/PrintNightmare-Technical-Analysis-Mitigation.git
-```
 
-3. **Set Temporary Execution Policy (If Needed)**
+2. **Set Temporary Execution Policy**
 
 Allow the script to run within your active session without changing global system policies:
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
 ```
- 
-4. **Change Directory**
+Press Y or A if prompted
 
+3. **Clone or Download the Repository**
 ```powershell
-cd \PrintNightmare-Technical-Analysis-Mitigation
+git clone https://github.com/kaiw-icspark25/PrintNightmare-Technical-Analysis-Mitigation.git
 ```
 
-4. **Run in Audit Mode (Safe / Read-Only)**
+4. **Change Directory**
+```powershell
+cd \PrintNightmare-Technical-Analysis-Mitigation 
+```
+or cd \thenamewheretheclonedreposlives
+
+5. **Run in Audit Mode (Safe / Read-Only)**
 ```powershell
 .\Audit-PrintNightmare.ps1
 ```
 
-5. **4. Run in Hardening Mode (Remediation)**
+6. **Run in Hardening Mode (Remediation)**
 ```powershell
 .\Audit-PrintNightmare.ps1 -Fix
 ```
 
-6. **Re-run in Audit Mode to check to see if it worked**
+7. **Re-run in Audit Mode to check to see if it worked**
 ```powershell
 .\Audit-PrintNightmare.ps1
 ```
