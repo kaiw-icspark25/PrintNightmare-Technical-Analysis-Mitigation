@@ -1,7 +1,9 @@
 # PrintNightmare-Technical-Analysis-Mitigation
 Technical Analysis: The PrintNightmare Vulnerability 
 An Investigation into CVE-2021-1675 and CVE-2021-34527 
-Ethical Disclaimer: This repository is created strictly for educational purposes, college academic portfolios, and defensive engineering. It contains no weaponized exploits and focuses entirely on post-patch root cause analysis and mitigation deployment.
+> [!IMPORTANT]
+> **Ethical Disclaimer:** This repository is created strictly for educational purposes, college academic portfolios, and defensive engineering. It contains no weaponized exploits and focuses entirely on post-patch root cause analysis and mitigation deployment.
+
 
 ## Scope & Variant Exclusions
 * **In-Scope:** CVE-2021-34527 & CVE-2021-1675 (Core PrintNightmare RCE/LPE via `RpcAddPrinterDriverEx`).
@@ -44,7 +46,7 @@ Both vulnerabilities exploit a structural error inside spoolsv.exe, specifically
 | Phase | Vector | Technical Action | Impact/Consequence |
 |:---|:---|:---|:---|
 | **Reconnaissance** | Network Scanning (Port 445) |Scans the target system to verify that the IPC$ share and the \pipe\spoolss named pipe are exposed.| identifies a vulnerable Windows machine (such as a Domain Controller) on the local network listening for remote print commands. |
-| **Access & Connection** | RPC over SMB (MS-RPRN / MS-PAR) | Authenticates using standard, low-privileged domain credentials and opens a communication tunnel to the Print Spooler service. | Authenticates using standard, low-privileged domain credentials and opens a communication tunnel to the Print Spooler service. |
+| **Access & Connection** | RPC over SMB (MS-RPRN / MS-PAR) | Authenticates using standard, low-privileged domain credentials and opens a communication tunnel to the Print Spooler service. | Establishes a direct network bridge to the vulnerable internal code from a remote machine. |
 | **Privilege Bypass** | API Parameter Manipulation | Calls the RpcAddPrinterDriverEx function while injecting the APD_COPY_ALL_FILES (0x10) flag into dwFileCopyFlags. | Tricks the logic bug into skipping the Administrator identity verification check (SeLoadDriverPrivilege). |
 | **Payload Delivery** | Remote SMB Share Retrieval | Supplies an external network path (e.g., \\attacker-ip\share\file.dll) inside the driver configuration structure.| Forces the highly privileged Spooler service to download an untrusted file into the local driver directory. |
 | **Code Execution** | Directory Junction Exploitation | Submits a malformed directory path structure containing unvalidated subfolders like \3\old\. | Bypasses path sanitization, forcing the system to load and execute the malicious DLL and granting the attacker full SYSTEM control. |
@@ -56,10 +58,12 @@ Make sure all security updates released after July 2021 are installed. Modern Wi
 
 ### Remediation Path 2: Hardening Registry
 Even with Windows Patches installed, malicious actors can exploit legacy code logic or misconfigured registries to bypass Windows updates entirely. Thus, explicit configuration is required via the Windows Registry or Group Policy Objects (GPO).
-The following registry parameters must be verified and hardened:
-* **Path:** `HKLM\Software\Policies\Microsoft\Windows NT\Printers\PointAndPrint`
-* **Key:** `RestrictDriverInstallationToAdministrators` $\rightarrow$ Must be set to `1` (Enforced)
-* **Key:** `NoWarningNoElevationOnInstall` $\rightarrow$ Must be set to `0` (Disabled)
+> [!NOTE]
+> **Target Registry Configuration:**
+> * **Path:** `HKLM\Software\Policies\Microsoft\Windows NT\Printers\PointAndPrint`
+> * **Key:** `RestrictDriverInstallationToAdministrators` → Set to `1` (Enforced)
+> * **Key:** `NoWarningNoElevationOnInstall` → Set to `0` (Disabled)
+
 
 ### Remediation Path 3: Disabling Spooler Service
 For servers that don't use physical printers that managed by GPO, it is best to disable Print Spooler service entirely. This can be done in Powershell(admin) or services.msc.
