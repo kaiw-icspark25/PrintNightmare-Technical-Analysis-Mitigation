@@ -119,9 +119,9 @@ To simplify compliance across Windows hosts, this repository includes an automat
 1. **Open Elevated PowerShell**
 Search Powershell in Windows Search Menu
 Right-click PowerShell and select Run as Administrator.
+![Run Powershell as Admin](.\assets\powershell_rightclick_admin.png)
 
-
-2. **Set Temporary Execution Policy**
+2. **Set Temporary Execution Policy(opt)**
 
 Allow the script to run within your active session without changing global system policies:
 
@@ -130,10 +130,14 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
 ```
 Press Y or A if prompted
 
+
+![Set Temporary Execution Policy](.\assets\temp_securitybypass.png)
+
 3. **Clone or Download the Repository**
 ```powershell
 git clone https://github.com/kaiw-icspark25/PrintNightmare-Technical-Analysis-Mitigation.git
 ```
+![Clone/Download Repos](.\assets\clone_git_repository.png)
 
 4. **Change Directory**
 ```powershell
@@ -141,20 +145,30 @@ cd \PrintNightmare-Technical-Analysis-Mitigation
 ```
 or cd \thenamewheretheclonedreposlives
 
+![Change directory](.\assets\change_dir.png)
+
 5. **Run in Audit Mode (Safe / Read-Only)**
 ```powershell
 .\Audit-PrintNightmare.ps1
 ```
+the example in the picture does not have correct directory, ignore the different directory in picture, just follow and input code normally
+![Run in Audit Mode](.\assets\initial_audit_run.png)
+
 
 6. **Run in Hardening Mode (Remediation)**
 ```powershell
 .\Audit-PrintNightmare.ps1 -Fix
 ```
+the example in the picture does not have correct directory, ignore the different directory in picture, just follow and input code normally
+![Actual Fixing Step](.\assets\fix_command.png)
 
 7. **Re-run in Audit Mode to check to see if it worked**
 ```powershell
 .\Audit-PrintNightmare.ps1
 ```
+the example in the picture does not have correct directory, ignore the different directory in picture, just follow and input code normally
+![Verify fixes occurred](.\assets\verify_fixes_workedcmd.png)
+no need to run fix command again if spooler is stopped and disabled, and registry keys are green
 
 ## 5. Conclusion & Key Takeaways
 The PrintNightmare vulnerability family (`CVE-2021-1675` / `CVE-2021-34527`) remains one of the most critical studies in modern Windows security. By analyzing this exploit chain, several security principles become clear:
