@@ -9,7 +9,7 @@ Ethical Disclaimer: This repository is created strictly for educational purposes
   * *Justification:* CVE-2021-34481 involves a separate Local Privilege Escalation mechanism disclosed in July 2021 and patched in August 2021. This repository focuses strictly on the SMB/RPC remote driver loading vectors of CVE-2021-34527&CVE-2021-1675.
 
 ## 1. Executive Summary
-The PrintNightmare(CVE-2021-34527 & CVE-2021-1675) is a critical vulnerability within the spoolsv.exe dealing with improper authorization and access control validation which are exploited through RPC functions.
+The PrintNightmare(CVE-2021-34527 & CVE-2021-1675) is a critical vulnerability within the built-in windows service spoolsv.exe dealing with improper authorization and access control validation which are exploited through RPC functions.
 
 ### Vulnerability Matrix
 |Metric|CVE-2021-1675|CVE-2021-34527|
@@ -21,7 +21,12 @@ The PrintNightmare(CVE-2021-34527 & CVE-2021-1675) is a critical vulnerability w
 | **Initial Patch Date** | June 8, 2021 | July 1, 2021 (Out-of-Band Emergency) |
 
 ## 2. History & CVE Duality
+Understanding PrintNightmare requires tracing the timeline of its chaotic public discovery, which forced the separation into two distinct CVE identifiers:
 
+* **CVE-2021-1675 (The June Bug):** Released during Microsoft's June 2021 Patch Tuesday, this was initially classified as a minor Local Privilege Escalation flaw. Microsoft provided a patch targeting local code execution pathways.
+* **CVE-2021-34527 (The Accident):** An independent research team (Sangfor) discovered a distinct logical pathway to trigger the same underlying defect remotely over a network via the Server Message Block (SMB) or Remote Procedure Call (RPC) protocols. Believing Microsoft's June patch had resolved the entire service flaw, the team published a fully functional Proof-of-Concept (PoC) exploit to GitHub on June 29, 2021. 
+
+The security community quickly realized the leaked PoC completely bypassed the June patch. Because this represented a different, unpatched execution path with a remote attack vector, Microsoft issued an emergency, out-of-band identifier on July 1, 2021, to track the active zero-day threat.
 
 ## 3. Technical Root Cause Analysis
 Both vulnerabilities exploit a structural error inside spoolsv.exe, specifically how the service handles permissions when installing print drivers(instructions for printer to talk to computers)
@@ -34,6 +39,8 @@ Both vulnerabilities exploit a structural error inside spoolsv.exe, specifically
 ### Built-in Windows Feature Flaws
 * **Point and Print:** Designed to let regular users install printer drivers automatically from a print server without IT intervention. This feature inherently trusted remote driver sources.
 * **RPC over SMB:** Windows enables remote printer management by default over SMB (IPC$ share and \pipe\spoolss named pipe), leaving the service exposed to the local network. This allows anyone on network to share files to this open file via RPC.
+
+### Attack Timeline
 
 
 ## 4. Defense Mitigations
@@ -59,7 +66,7 @@ For servers that don't use physical printers that managed by GPO, it is best to 
 Stop-Service -Name Spooler -Force
 Set-Service -Name Spooler -StartupType Disabled
 ```
-#### Services.msc
+#### services.msc
 1. Open the Run Dialog: Press the Windows Key + R on your keyboard to open the Run box.
 2. Launch Services: Type services.msc into the box and press Enter (or click OK).
 3. Locate the Service: Scroll down the alphabetical list of services until you find Print Spooler.
