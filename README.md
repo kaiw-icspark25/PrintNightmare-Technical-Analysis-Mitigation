@@ -35,21 +35,21 @@ Both vulnerabilities exploit a structural error inside spoolsv.exe, specifically
 ### Windows API weaknesses
 * **Lack of Privilege Verification:** The functions used to add printer drivers, locally `RpcAddPrinterDriverEx()`, and remotely `RpcAsyncAddPrinterDriver()`, both failed to verify that the user installing the drivers had `SeLoadDriverPrivilege`(Admin Rights).
 * **Parameter Manipulation:** If the dwFileCopyFlags parameter contained specific flags (like APD_COPY_ALL_FILES), the code assumed the files were already verified, allowing a standard user to execute high privilege commands.
-* **Directory Junction Exploitation:**  The internal driver management code failed to properly sanitize folder paths, allowing strings containing subdirectories like \3\old\ to misdirect the file parser. This bug forces the Spooler to look inside the wrong folder directory, bypass verification checks, and actively run the malicious file.
-* **Full Privileged Context:** Because spoolsv.exe runs natively under the NT AUTHORITY\SYSTEM context, any code it was tricked into loading inherited full, unrestricted access to the OS kernel.
+* **Directory Junction Exploitation:**  The internal driver management code failed to properly sanitize folder paths, allowing strings containing subdirectories like /3/old/ to misdirect the file parser. This bug forces the Spooler to look inside the wrong folder directory, bypass verification checks, and actively run the malicious file.
+* **Full Privileged Context:** Because spoolsv.exe runs natively under the NT AUTHORITY/SYSTEM context, any code it was tricked into loading inherited full, unrestricted access to the OS kernel.
 
 ### Built-in Windows Feature Flaws
 * **Point and Print:** Designed to let regular users install printer drivers automatically from a print server without IT intervention. This feature inherently trusted remote driver sources.
-* **RPC over SMB:** Windows enables remote printer management by default over SMB (IPC$ share and \pipe\spoolss named pipe), leaving the service exposed to the local network. This allows anyone on network to share files to this open file via RPC.
+* **RPC over SMB:** Windows enables remote printer management by default over SMB (IPC$ share and /pipe/spoolss named pipe), leaving the service exposed to the local network. This allows anyone on network to share files to this open file via RPC.
 
 ### Attack Timeline
 | Phase | Vector | Technical Action | Impact/Consequence |
 |:---|:---|:---|:---|
-| **Reconnaissance** | Network Scanning (Port 445) |Scans the target system to verify that the IPC$ share and the \pipe\spoolss named pipe are exposed.| identifies a vulnerable Windows machine (such as a Domain Controller) on the local network listening for remote print commands. |
+| **Reconnaissance** | Network Scanning (Port 445) |Scans the target system to verify that the IPC$ share and the /pipe/spoolss named pipe are exposed.| identifies a vulnerable Windows machine (such as a Domain Controller) on the local network listening for remote print commands. |
 | **Access & Connection** | RPC over SMB (MS-RPRN / MS-PAR) | Authenticates using standard, low-privileged domain credentials and opens a communication tunnel to the Print Spooler service. | Establishes a direct network bridge to the vulnerable internal code from a remote machine. |
 | **Privilege Bypass** | API Parameter Manipulation | Calls the RpcAddPrinterDriverEx function while injecting the APD_COPY_ALL_FILES (0x10) flag into dwFileCopyFlags. | Tricks the logic bug into skipping the Administrator identity verification check (SeLoadDriverPrivilege). |
-| **Payload Delivery** | Remote SMB Share Retrieval | Supplies an external network path (e.g., \\attacker-ip\share\file.dll) inside the driver configuration structure.| Forces the highly privileged Spooler service to download an untrusted file into the local driver directory. |
-| **Code Execution** | Directory Junction Exploitation | Submits a malformed directory path structure containing unvalidated subfolders like \3\old\. | Bypasses path sanitization, forcing the system to load and execute the malicious DLL and granting the attacker full SYSTEM control. |
+| **Payload Delivery** | Remote SMB Share Retrieval | Supplies an external network path (e.g., //attacker-ip/share/file.dll) inside the driver configuration structure.| Forces the highly privileged Spooler service to download an untrusted file into the local driver directory. |
+| **Code Execution** | Directory Junction Exploitation | Submits a malformed directory path structure containing unvalidated subfolders like /3/old/. | Bypasses path sanitization, forcing the system to load and execute the malicious DLL and granting the attacker full SYSTEM control. |
 
 ## 4. Defense Mitigations
 PrintNightmare can be completely neutralized by basic network hardening techniques for small businesses and enterprise networks.
@@ -62,7 +62,7 @@ Make sure all security updates released after July 2021 are installed. Modern Wi
 Even with Windows Patches installed, malicious actors can exploit legacy code logic or misconfigured registries to bypass Windows updates entirely. Thus, explicit configuration is required via the Windows Registry or Group Policy Objects (GPO).
 > [!NOTE]
 > **Target Registry Configuration:**
-> * **Path:** `HKLM\Software\Policies\Microsoft\Windows NT\Printers\PointAndPrint`
+> * **Path:** `HKLM/Software/Policies/Microsoft/Windows NT/Printers/PointAndPrint`
 > * **Key:** `RestrictDriverInstallationToAdministrators` → Set to `1` (Enforced)
 > * **Key:** `NoWarningNoElevationOnInstall` → Set to `0` (Disabled)
 > * **Key:** `NoWarningNoElevationOnUpdate` → Set to `0` (Disabled)
@@ -103,9 +103,9 @@ To simplify compliance across Windows hosts, this repository includes an automat
 
 | Setting | Path | Target Value | Security Purpose |
 | :--- | :--- | :--- | :--- |
-| **RestrictDriverInstallationToAdministrators** | `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers\PointAndPrint` | `1` (`DWORD`) | Restricts driver installation privileges strictly to administrators. |
-| **NoWarningNoElevationOnInstall** | `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers\PointAndPrint` | `0` (`DWORD`) | Enforces elevation prompts when installing new printer drivers. |
-| **NoWarningNoElevationOnUpdate** | `HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers\PointAndPrint` | `0` (`DWORD`) | Enforces elevation prompts when updating existing printer drivers. |
+| **RestrictDriverInstallationToAdministrators** | `HKLM:/SOFTWARE/Policies/Microsoft/Windows NT/Printers/PointAndPrint` | `1` (`DWORD`) | Restricts driver installation privileges strictly to administrators. |
+| **NoWarningNoElevationOnInstall** | `HKLM:/SOFTWARE/Policies/Microsoft/Windows NT/Printers/PointAndPrint` | `0` (`DWORD`) | Enforces elevation prompts when installing new printer drivers. |
+| **NoWarningNoElevationOnUpdate** | `HKLM:/SOFTWARE/Policies/Microsoft/Windows NT/Printers/PointAndPrint` | `0` (`DWORD`) | Enforces elevation prompts when updating existing printer drivers. |
 | **Print Spooler Service** | `Spooler` (`spoolsv.exe`) | `Stopped`,`Disabled` | Stops & Disables service on endpoints/DCs that do not host physical printers. |
 
 ### Prerequisites
@@ -119,7 +119,7 @@ To simplify compliance across Windows hosts, this repository includes an automat
 1. **Open Elevated PowerShell**
 Search Powershell in Windows Search Menu
 Right-click PowerShell and select Run as Administrator.
-![Run Powershell as Admin](.\assets\powershell_rightclick_admin.png)
+![Run Powershell as Admin](./assets/powershell_rightclick_admin.png)
 
 2. **Set Temporary Execution Policy(opt)**
 
@@ -131,53 +131,53 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
 Press Y or A if prompted
 
 
-![Set Temporary Execution Policy](.\assets\temp_securitybypass.png)
+![Set Temporary Execution Policy](./assets/temp_securitybypass.png)
 
 3. **Clone or Download the Repository**
 ```powershell
 git clone https://github.com/kaiw-icspark25/PrintNightmare-Technical-Analysis-Mitigation.git
 ```
-![Clone/Download Repos](.\assets\clone_git_repository.png)
+![Clone/Download Repos](./assets/clone_git_repository.png)
 
 4. **Change Directory**
 ```powershell
-cd \PrintNightmare-Technical-Analysis-Mitigation 
+cd /PrintNightmare-Technical-Analysis-Mitigation 
 ```
-or cd \thenamewheretheclonedreposlives
+or cd /thenamewheretheclonedreposlives
 
-![Change directory](.\assets\change_dir.png)
+![Change directory](./assets/change_dir.png)
 
 5. **Run in Audit Mode (Safe / Read-Only)**
 ```powershell
-.\Audit-PrintNightmare.ps1
+./Audit-PrintNightmare.ps1
 ```
 the example in the picture does not have correct directory, ignore the different directory in picture, just follow and input code normally
-![Run in Audit Mode](.\assets\initial_audit_run.png)
+![Run in Audit Mode](./assets/initial_audit_run.png)
 
 
 6. **Run in Hardening Mode (Remediation)**
 ```powershell
-.\Audit-PrintNightmare.ps1 -Fix
+./Audit-PrintNightmare.ps1 -Fix
 ```
 the example in the picture does not have correct directory, ignore the different directory in picture, just follow and input code normally
-![Actual Fixing Step](.\assets\fix_command.png)
+![Actual Fixing Step](./assets/fix_command.png)
 
 7. **Re-run in Audit Mode to check to see if it worked**
 ```powershell
-.\Audit-PrintNightmare.ps1
+./Audit-PrintNightmare.ps1
 ```
 the example in the picture does not have correct directory, ignore the different directory in picture, just follow and input code normally
-![Verify fixes occurred](.\assets\verify_fixes_workedcmd.png)
+![Verify fixes occurred](./assets/verify_fixes_workedcmd.png)
 no need to run fix command again if spooler is stopped and disabled, and registry keys are green
 
 ## 5. Conclusion & Key Takeaways
 The PrintNightmare vulnerability family (`CVE-2021-1675` / `CVE-2021-34527`) remains one of the most critical studies in modern Windows security. By analyzing this exploit chain, several security principles become clear:
 
 * **The Danger of Intertwined Logic:** The exploit successfully bypassed authentication because the `RpcAddPrinterDriverEx` function implicitly trusted API flags (`dwFileCopyFlags`) over explicit authorization checks (`SeLoadDriverPrivilege`). Security controls must always be absolute, never conditional on user-supplied parameters.
-* **Privileged File Handling Risks:** Allowing a system-level service (`NT AUTHORITY\SYSTEM`) to fetch unvalidated files from remote, untrusted SMB paths creates an immediate vector for arbitrary file write and remote code execution.
+* **Privileged File Handling Risks:** Allowing a system-level service (`NT AUTHORITY/SYSTEM`) to fetch unvalidated files from remote, untrusted SMB paths creates an immediate vector for arbitrary file write and remote code execution.
 * **Defense-in-Depth Imperative:** While Microsoft patched the immediate software bugs, true network resilience required changing the platform's default architecture—such as restricting driver installation strictly to administrators and enforcing Point and Print restrictions.
 
-Understanding how these vulnerabilities functioned highlights the importance of \coding standards, path sanitization, and the principle of least privilege when designing enterprise services.
+Understanding how these vulnerabilities functioned highlights the importance of /coding standards, path sanitization, and the principle of least privilege when designing enterprise services.
 
 
 ## 6. References & Technical Resources
@@ -194,7 +194,7 @@ Understanding how these vulnerabilities functioned highlights the importance of 
 
 ### Public Proof-of-Concepts & Implementations
 * **cube0x0:** [SharpPrintNightmare Repository](https://github.com) — *C# implementation demonstrating the specific `dwFileCopyFlags` (0x10) manipulation.*
-* **ly4k:** [PrintNightmare Python Exploit](https://github.com) — *Demonstrates remote network exploitation via the `\pipe\spoolss` named pipe.*
+* **ly4k:** [PrintNightmare Python Exploit](https://github.com) — *Demonstrates remote network exploitation via the `/pipe/spoolss` named pipe.*
 
 
 
