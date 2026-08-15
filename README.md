@@ -41,7 +41,13 @@ Both vulnerabilities exploit a structural error inside spoolsv.exe, specifically
 * **RPC over SMB:** Windows enables remote printer management by default over SMB (IPC$ share and \pipe\spoolss named pipe), leaving the service exposed to the local network. This allows anyone on network to share files to this open file via RPC.
 
 ### Attack Timeline
-
+| Phase | Vector | Technical Action | Impact/Consequence |
+|:---|:---|:---|:---|
+| **Reconnaissance** | Network Scanning (Port 445) |Scans the target system to verify that the IPC$ share and the \pipe\spoolss named pipe are exposed.| identifies a vulnerable Windows machine (such as a Domain Controller) on the local network listening for remote print commands. |
+| **Access & Connection** | RPC over SMB (MS-RPRN / MS-PAR) | Authenticates using standard, low-privileged domain credentials and opens a communication tunnel to the Print Spooler service. | Authenticates using standard, low-privileged domain credentials and opens a communication tunnel to the Print Spooler service. |
+| **Privilege Bypass** | API Parameter Manipulation | Calls the RpcAddPrinterDriverEx function while injecting the APD_COPY_ALL_FILES (0x10) flag into dwFileCopyFlags. | Tricks the logic bug into skipping the Administrator identity verification check (SeLoadDriverPrivilege). |
+| **Payload Delivery** | Remote SMB Share Retrieval | Supplies an external network path (e.g., \\attacker-ip\share\file.dll) inside the driver configuration structure.| Forces the highly privileged Spooler service to download an untrusted file into the local driver directory. |
+| **Code Execution** | Directory Junction Exploitation | Submits a malformed directory path structure containing unvalidated subfolders like \3\old\. | Bypasses path sanitization, forcing the system to load and execute the malicious DLL and granting the attacker full SYSTEM control. |
 
 ## 4. Defense Mitigations
 PrintNightmare can be completely neutralized by basic network hardening techniques for small businesses and enterprise networks.
