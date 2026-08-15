@@ -177,7 +177,7 @@ The PrintNightmare vulnerability family (`CVE-2021-1675` / `CVE-2021-34527`) rem
 * **Privileged File Handling Risks:** Allowing a system-level service (`NT AUTHORITY/SYSTEM`) to fetch unvalidated files from remote, untrusted SMB paths creates an immediate vector for arbitrary file write and remote code execution.
 * **Defense-in-Depth Imperative:** While Microsoft patched the immediate software bugs, true network resilience required changing the platform's default architecture—such as restricting driver installation strictly to administrators and enforcing Point and Print restrictions.
 
-Understanding how these vulnerabilities functioned highlights the importance of /coding standards, path sanitization, and the principle of least privilege when designing enterprise services.
+Understanding how these vulnerabilities functioned highlights the importance of coding standards, path sanitization, and the principle of least privilege when designing enterprise services.
 
 
 ## 6. References & Technical Resources
